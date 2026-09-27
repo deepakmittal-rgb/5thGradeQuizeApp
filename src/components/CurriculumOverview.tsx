@@ -6,13 +6,18 @@ import {
   ModuleId,
   StudentProfile,
 } from '../types/math';
-import { CURRICULUM_MODULES, gcd } from '../data/curriculumData';
+import {
+  CURRICULUM_MODULES,
+  evaluateStudentAchievements,
+  gcd,
+} from '../data/curriculumData';
 
 interface CurriculumOverviewProps {
   student: StudentProfile;
   onStartModuleQuiz: (moduleId: ModuleId) => void;
   onStartDomainQuiz: (domain: DomainCategory | 'mixed') => void;
   onOpenSandbox: () => void;
+  onOpenProgress: () => void;
 }
 
 export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
@@ -20,15 +25,19 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
   onStartModuleQuiz,
   onStartDomainQuiz,
   onOpenSandbox,
+  onOpenProgress,
 }) => {
   // Interactive Hero Equivalence Explorer state
-  const [heroNum, setHeroNum] = useState<number>(3);
-  const [heroDen, setHeroDen] = useState<number>(4);
+  const [heroNum, setHeroNum] = useState<number>(5);
+  const [heroDen, setHeroDen] = useState<number>(8);
   const [trackFilter, setTrackFilter] = useState<'all' | DomainCategory>('all');
 
   const heroDecimal = heroNum / heroDen;
-  const heroHundredths = Math.round(heroDecimal * 100);
+  const heroPercent = Number((heroDecimal * 100).toFixed(1));
   const gHero = gcd(heroNum, heroDen);
+
+  const achievements = evaluateStudentAchievements(student);
+  const earnedBadgesCount = achievements.filter((b) => b.unlocked).length;
 
   const renderStatusText = (status: MasteryStatus) => {
     if (status === 'Mastered') {
@@ -64,7 +73,7 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
               {mod.ccssCode}
             </span>
             <span aria-hidden="true">·</span>
-            <span>{mod.estimatedMinutes} min quiz</span>
+            <span>{mod.estimatedMinutes} min</span>
             <span aria-hidden="true">·</span>
             {prog ? renderStatusText(prog.masteryLevel) : renderStatusText('Not Started')}
             {acc !== null && (
@@ -139,22 +148,22 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
         {/* Left Hero Column: Editorial Copy & Single Focal CTA */}
         <div className="space-y-5 lg:col-span-6">
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span>5th Grade Common Core Mathematics</span>
+            <span>Entering 6th Grade Acceleration</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono">CCSS.5.NF & 5.NBT</span>
+            <span className="font-mono">CCSS.5.NF / 5.NBT → 6.NS / 6.RP</span>
             <span aria-hidden="true">·</span>
-            <span>Interactive Assessment Studio</span>
+            <span>5th-Grade Foundation Verified</span>
           </div>
 
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Master Fractions and Decimals Through Visual Reasoning.
+            From 5th-Grade Mastery to 6th-Grade Mathematical Fluency.
           </h1>
 
           <p className="text-base leading-relaxed text-slate-600 max-w-xl">
-            Explore proportional fraction bars, common denominator partitions,
-            and Base-10 hundredths grids alongside adaptive 5th-grade quizzes
-            with step-by-step worked solutions and standard-level mastery
-            tracking.
+            Designed for rising 6th graders with a strong command of 5th-grade
+            math. Tackle reciprocal fraction division, multi-digit decimal
+            divisors, GCF/LCM algebraic factoring, unit rates, percents, and
+            exponents with interactive visual models.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -163,21 +172,21 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
               onClick={() => onStartDomainQuiz('mixed')}
               className="rounded-lg bg-[#0284C7] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0369A1] whitespace-nowrap"
             >
-              Start 5th-Grade Diagnostic Quiz
+              Start 6th-Grade Readiness Diagnostic
             </button>
             <button
               type="button"
-              onClick={() => onStartDomainQuiz('fractions')}
+              onClick={() => onStartDomainQuiz('bridge6')}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 whitespace-nowrap"
             >
-              Fractions Quiz (5.NF)
+              Ratios & Exponents Bridge (6.RP/EE)
             </button>
             <button
               type="button"
-              onClick={() => onStartDomainQuiz('decimals')}
+              onClick={onOpenProgress}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 whitespace-nowrap"
             >
-              Decimals Quiz (5.NBT)
+              View Earned Badges ({earnedBadgesCount}/{achievements.length})
             </button>
           </div>
 
@@ -185,10 +194,10 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
           <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-5">
             <div>
               <div className="font-mono text-xl font-semibold text-slate-900 tabular-nums">
-                {totalMastered} / 8
+                {totalMastered} / 10
               </div>
               <div className="text-xs text-slate-500">
-                Standards Mastered by {student.name.split(' ')[0]}
+                Grade 5→6 Modules Mastered
               </div>
             </div>
             <div>
@@ -204,28 +213,29 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
             </div>
             <div>
               <div className="font-mono text-xl font-semibold text-[#0284C7] tabular-nums">
-                {student.dailyStreak} Days
+                {earnedBadgesCount} / {achievements.length}
               </div>
               <div className="text-xs text-slate-500">
-                Active Practice Streak
+                Mastery Badges Unlocked
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Hero Column: Live Interactive Fraction ↔ Decimal Equivalence Bridge */}
+        {/* Right Hero Column: Live Interactive Fraction ↔ Decimal ↔ Percent Triad Bridge */}
         <div className="rounded-xl border border-slate-200 bg-[#F8FAFC] p-5 space-y-4 lg:col-span-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <div>
               <span className="text-xs font-medium text-slate-500">
-                Live Interactive Manipulative · Try Clicking Segments
+                Live Interactive Manipulative · Click Segments to Scale
               </span>
               <h2 className="text-base font-semibold text-slate-900">
-                Fraction ↔ Decimal Equivalence Bridge
+                Fraction ↔ Decimal ↔ Percent Triad Explorer
               </h2>
             </div>
             <span className="font-mono text-sm font-semibold text-[#0284C7] tabular-nums">
-              {heroNum}/{heroDen} = {heroDecimal.toFixed(heroDen === 8 ? 3 : 2)}
+              {heroNum}/{heroDen} = {heroDecimal.toFixed(heroDen === 8 ? 3 : 2)} ={' '}
+              {heroPercent}%
             </span>
           </div>
 
@@ -236,7 +246,8 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
                 1. Click Fraction Segments ({heroNum} of {heroDen} shaded)
               </span>
               <span className="font-mono text-xs text-slate-600 tabular-nums">
-                Simplest Form: {heroNum / gHero}/{heroDen / gHero}
+                Simplest Ratio: {heroNum / gHero}:{heroDen / gHero} (
+                {heroNum / gHero}/{heroDen / gHero})
               </span>
             </div>
             <div className="flex h-11 w-full overflow-hidden rounded-lg border-2 border-slate-800 bg-white">
@@ -260,19 +271,19 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
             </div>
           </div>
 
-          {/* Synchronized Hundredths Decimal Bar */}
+          {/* Synchronized Hundredths Decimal & Percent Bar */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-slate-700">
-                2. Synchronized Base-10 Decimal Scale (Hundredths & Thousandths)
+                2. Synchronized Decimal & Percent Scale (Base-10)
               </span>
               <span className="font-mono font-semibold text-[#059669] tabular-nums">
-                {heroDecimal.toFixed(heroDen === 8 ? 3 : 2)} ({heroHundredths}/100)
+                {heroDecimal.toFixed(heroDen === 8 ? 3 : 2)} ({heroPercent}% of Whole)
               </span>
             </div>
             <div className="relative h-8 w-full overflow-hidden rounded-lg border border-slate-300 bg-white">
               <div
-                className="h-full bg-[#059669] transition-all duration-150"
+                className="h-full bg-[#059669] transition-opacity duration-150"
                 style={{ width: `${Math.min(100, heroDecimal * 100)}%` }}
               />
               <div className="absolute inset-0 grid grid-cols-10 pointer-events-none">
@@ -281,7 +292,7 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
                     key={i}
                     className="border-r border-slate-900/15 last:border-r-0 flex items-center justify-end pr-1 font-mono text-[10px] text-slate-600 tabular-nums"
                   >
-                    .{(i + 1)}
+                    {(i + 1) * 10}%
                   </div>
                 ))}
               </div>
@@ -329,20 +340,21 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
         <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-xs font-medium text-slate-500">
-              Structured 5th-Grade Scope & Sequence
+              Accelerated 5th-to-6th Grade Scope & Sequence
             </div>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-              Curriculum Modules & Interactive Quizzes
+              All 10 Curriculum Modules & Interactive Assessments
             </h2>
           </div>
 
           {/* Interactive Track Filter */}
-          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1">
             {(
               [
-                { id: 'all', label: 'All 8 Modules' },
-                { id: 'fractions', label: 'Fractions Track (01–04)' },
-                { id: 'decimals', label: 'Decimals Track (05–08)' },
+                { id: 'all', label: 'All 10 Modules' },
+                { id: 'fractions', label: 'Fractions (01–04)' },
+                { id: 'decimals', label: 'Decimals (05–08)' },
+                { id: 'bridge6', label: '6th-Grade Bridge (09–10)' },
               ] as const
             ).map((tab) => (
               <button
@@ -367,10 +379,10 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  Track I: Fractions Equivalence & Operations (CCSS.5.NF)
+                  Track I: Fractions, GCF/LCM & Reciprocal Division (CCSS.5.NF → 6.NS.A)
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Visual fraction bars, least common denominators, mixed numbers, and 2D unit area multiplication.
+                  Distributive GCF factoring, multi-step unlike fraction equations, mixed number scaling, and fraction-by-fraction division.
                 </p>
               </div>
               <button
@@ -396,10 +408,10 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  Track II: Decimals Place Value & Operations (CCSS.5.NBT)
+                  Track II: Precision Decimals, Powers of 10 & Decimal Division (CCSS.5.NBT → 6.NS.B)
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Base-10 hundredths & thousandths grids, coordinate number line rounding, decimal alignment, and fraction conversion.
+                  Exponent powers of 10, rational number line ordering, multi-digit decimal product scaling, and decimal divisors.
                 </p>
               </div>
               <button
@@ -413,6 +425,35 @@ export const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {CURRICULUM_MODULES.filter((m) => m.domain === 'decimals').map(
+                renderModuleCard
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Track 3: 6th-Grade Bridge (Ratios, Percents, Exponents, Volume, Coordinates) */}
+        {(trackFilter === 'all' || trackFilter === 'bridge6') && (
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Track III: Complete 5th→6th Grade Bridge — Ratios, Exponents & Volume (6.RP · 6.EE · 6.G)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Part-to-whole ratios, unit rate speed/pricing, percent proportions, PEMDAS with exponents, fractional prism volume, and coordinates.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onStartDomainQuiz('bridge6')}
+                className="text-xs font-semibold text-[#D97706] hover:underline whitespace-nowrap"
+              >
+                Quiz 6th-Grade Bridge →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {CURRICULUM_MODULES.filter((m) => m.domain === 'bridge6').map(
                 renderModuleCard
               )}
             </div>

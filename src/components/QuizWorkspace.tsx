@@ -79,10 +79,12 @@ export const QuizWorkspace: React.FC<QuizWorkspaceProps> = ({
       title = modObj
         ? `Dynamic Practice: ${modObj.indexNumber}. ${modObj.title}`
         : domain === 'fractions'
-          ? 'Dynamic Fractions Mastery Set'
+          ? 'Dynamic Fractions & Rational Division Set'
           : domain === 'decimals'
-            ? 'Dynamic Decimals Mastery Set'
-            : 'Dynamic 5th-Grade Mixed Spiral Quiz';
+            ? 'Dynamic Precision Decimals Set'
+            : domain === 'bridge6'
+              ? 'Dynamic 6th-Grade Bridge (Ratios, Exponents & Volume)'
+              : 'Dynamic 6th-Grade Readiness Spiral Quiz';
     } else if (modId) {
       list = CURATED_QUESTIONS.filter((q) => q.moduleId === modId);
       const modObj = CURRICULUM_MODULES.find((m) => m.id === modId);
@@ -91,16 +93,19 @@ export const QuizWorkspace: React.FC<QuizWorkspaceProps> = ({
         : 'Module Assessment';
     } else if (domain === 'fractions') {
       list = CURATED_QUESTIONS.filter((q) => q.domain === 'fractions').slice(0, 8);
-      title = 'Fractions Domain Assessment (CCSS.5.NF)';
+      title = 'Fractions & Rational Division Assessment (5.NF → 6.NS.A)';
     } else if (domain === 'decimals') {
       list = CURATED_QUESTIONS.filter((q) => q.domain === 'decimals').slice(0, 8);
-      title = 'Decimals Domain Assessment (CCSS.5.NBT)';
+      title = 'Precision Decimals Assessment (5.NBT → 6.NS.B)';
+    } else if (domain === 'bridge6') {
+      list = CURATED_QUESTIONS.filter((q) => q.domain === 'bridge6');
+      title = '6th-Grade Bridge: Ratios, Percents, Exponents & Volume';
     } else {
-      // Balanced 8-question spiral assessment (1 per module)
+      // Balanced 10-question spiral assessment (1 per module)
       list = CURRICULUM_MODULES.map(
         (m) => CURATED_QUESTIONS.find((q) => q.moduleId === m.id)!
       ).filter(Boolean);
-      title = 'Full 5th-Grade Fractions & Decimals Diagnostic';
+      title = 'Full 5th→6th Grade Readiness Spiral Diagnostic';
     }
 
     setQuestions(list);
@@ -319,8 +324,9 @@ export const QuizWorkspace: React.FC<QuizWorkspaceProps> = ({
             {(
               [
                 { id: 'mixed', label: 'All Topics' },
-                { id: 'fractions', label: 'Fractions (5.NF)' },
-                { id: 'decimals', label: 'Decimals (5.NBT)' },
+                { id: 'fractions', label: 'Fractions (5.NF→6.NS)' },
+                { id: 'decimals', label: 'Decimals (5.NBT→6.NS)' },
+                { id: 'bridge6', label: '6th Bridge (6.RP/EE)' },
               ] as const
             ).map((tab) => (
               <button
@@ -362,7 +368,7 @@ export const QuizWorkspace: React.FC<QuizWorkspaceProps> = ({
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 focus:border-[#0284C7] focus:outline-none"
           >
             <option value="">All Modules in Selected Track</option>
-            <optgroup label="Fractions (CCSS.5.NF)">
+            <optgroup label="Track I: Fractions (5.NF → 6.NS.A)">
               {CURRICULUM_MODULES.filter((m) => m.domain === 'fractions').map(
                 (m) => (
                   <option key={m.id} value={m.id}>
@@ -371,8 +377,17 @@ export const QuizWorkspace: React.FC<QuizWorkspaceProps> = ({
                 )
               )}
             </optgroup>
-            <optgroup label="Decimals (CCSS.5.NBT)">
+            <optgroup label="Track II: Decimals (5.NBT → 6.NS.B)">
               {CURRICULUM_MODULES.filter((m) => m.domain === 'decimals').map(
+                (m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.indexNumber}. {m.title}
+                  </option>
+                )
+              )}
+            </optgroup>
+            <optgroup label="Track III: 6th-Grade Bridge (6.RP · 6.EE · 6.G)">
+              {CURRICULUM_MODULES.filter((m) => m.domain === 'bridge6').map(
                 (m) => (
                   <option key={m.id} value={m.id}>
                     {m.indexNumber}. {m.title}

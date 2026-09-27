@@ -6,6 +6,7 @@ import {
   StudentProfile,
 } from '../types/math';
 import { CURRICULUM_MODULES } from '../data/curriculumData';
+import { AchievementsShowcase } from './AchievementsShowcase';
 
 interface ProgressDashboardViewProps {
   student: StudentProfile;
@@ -20,18 +21,23 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
   onStartDomainQuiz,
   onResetStudentProgress,
 }) => {
-  const [domainFilter, setDomainFilter] = useState<'all' | DomainCategory | 'review'>('all');
+  const [domainFilter, setDomainFilter] = useState<
+    'all' | DomainCategory | 'review'
+  >('all');
   const [expandedAttemptId, setExpandedAttemptId] = useState<string | null>(
     student.attemptHistory[0]?.id ?? null
   );
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
 
-  // Compute aggregate Fractions vs Decimals metrics
+  // Compute aggregate Fractions, Decimals, and 6th-Grade Bridge metrics
   const fractionModules = CURRICULUM_MODULES.filter(
     (m) => m.domain === 'fractions'
   );
   const decimalModules = CURRICULUM_MODULES.filter(
     (m) => m.domain === 'decimals'
+  );
+  const bridgeModules = CURRICULUM_MODULES.filter(
+    (m) => m.domain === 'bridge6'
   );
 
   const calcDomainStats = (mods: typeof CURRICULUM_MODULES) => {
@@ -61,18 +67,28 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
 
   const fracStats = calcDomainStats(fractionModules);
   const decStats = calcDomainStats(decimalModules);
-  const overallAttempted = fracStats.attempted + decStats.attempted;
-  const overallCorrect = fracStats.correct + decStats.correct;
+  const bridgeStats = calcDomainStats(bridgeModules);
+
+  const overallAttempted =
+    fracStats.attempted + decStats.attempted + bridgeStats.attempted;
+  const overallCorrect =
+    fracStats.correct + decStats.correct + bridgeStats.correct;
   const overallAccuracy =
     overallAttempted > 0
       ? Math.round((overallCorrect / overallAttempted) * 100)
       : 0;
+  const totalMastered =
+    fracStats.masteredCount +
+    decStats.masteredCount +
+    bridgeStats.masteredCount;
 
   const filteredModules = CURRICULUM_MODULES.filter((m) => {
     if (domainFilter === 'all') return true;
     if (domainFilter === 'review') {
       const p = student.moduleProgress[m.id];
-      return p?.masteryLevel === 'Needs Review' || p?.masteryLevel === 'Developing';
+      return (
+        p?.masteryLevel === 'Needs Review' || p?.masteryLevel === 'Developing'
+      );
     }
     return m.domain === domainFilter;
   });
@@ -99,27 +115,23 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
         </span>
       );
     }
-    return (
-      <span className="font-mono text-xs text-slate-400">
-        ○ Not Started
-      </span>
-    );
+    return <span className="font-mono text-xs text-slate-400">○ Not Started</span>;
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       {/* Header & Student Overview */}
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span>Student Mastery Analytics</span>
+            <span>Rising 6th-Grade Mastery Analytics</span>
             <span aria-hidden="true">·</span>
             <span>{student.name}</span>
             <span aria-hidden="true">·</span>
             <span>{student.gradeLabel}</span>
           </div>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            Fractions & Decimals Progress Record
+            Progress Dashboard & Mastery Achievements
           </h2>
         </div>
 
@@ -159,132 +171,170 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
             onClick={() => onStartDomainQuiz('mixed')}
             className="rounded-lg bg-[#0284C7] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#0369A1] whitespace-nowrap"
           >
-            Take Full Spiral Diagnostic
+            Take 6th-Grade Readiness Diagnostic
           </button>
         </div>
       </div>
 
-      {/* Side-by-Side Domain Comparison: Fractions vs Decimals */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Card 1: Fractions Track (CCSS.5.NF) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between gap-5">
-          <div className="space-y-2">
+      {/* Domain Comparison Cards: Fractions, Decimals, and 6th-Grade Bridge */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        {/* Card 1: Fractions Track (CCSS.5.NF → 6.NS.A) */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between gap-4">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Domain 01 · CCSS.5.NF</span>
+              <span>Track I · 5.NF → 6.NS.A</span>
               <span className="font-mono font-semibold text-[#0284C7] tabular-nums">
-                {fracStats.masteredCount}/{fracStats.totalModules} Modules Mastered
+                {fracStats.masteredCount}/{fracStats.totalModules} Mastered
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Fractions Operations & Equivalence
+            <h3 className="text-base font-semibold text-slate-900">
+              Fractions & Rational Division
             </h3>
-            <div className="flex items-baseline gap-3 pt-1">
-              <span className="font-mono text-3xl font-semibold text-slate-900 tabular-nums">
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-mono text-2xl font-semibold text-slate-900 tabular-nums">
                 {fracStats.accuracy}%
               </span>
               <span className="font-mono text-xs text-slate-500 tabular-nums">
-                ({fracStats.correct}/{fracStats.attempted} Questions Correct)
+                ({fracStats.correct}/{fracStats.attempted} Correct)
               </span>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full bg-[#0284C7] transition-opacity duration-200"
+                className="h-full bg-[#0284C7]"
                 style={{ width: `${fracStats.accuracy}%` }}
               />
             </div>
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-slate-500">
-                Equivalence · LCD · Mixed · Area Mult
-              </span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">GCF · LCD · Reciprocals</span>
               <button
                 type="button"
                 onClick={() => onStartDomainQuiz('fractions')}
-                className="text-xs font-semibold text-[#0284C7] hover:underline whitespace-nowrap"
+                className="font-semibold text-[#0284C7] hover:underline whitespace-nowrap"
               >
-                Practice Fractions →
+                Quiz Track I →
               </button>
             </div>
           </div>
         </div>
 
-        {/* Card 2: Decimals Track (CCSS.5.NBT) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between gap-5">
-          <div className="space-y-2">
+        {/* Card 2: Decimals Track (CCSS.5.NBT → 6.NS.B) */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between gap-4">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Domain 02 · CCSS.5.NBT</span>
+              <span>Track II · 5.NBT → 6.NS.B</span>
               <span className="font-mono font-semibold text-[#059669] tabular-nums">
-                {decStats.masteredCount}/{decStats.totalModules} Modules Mastered
+                {decStats.masteredCount}/{decStats.totalModules} Mastered
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Decimals Place Value & Operations
+            <h3 className="text-base font-semibold text-slate-900">
+              Precision Decimals & Operations
             </h3>
-            <div className="flex items-baseline gap-3 pt-1">
-              <span className="font-mono text-3xl font-semibold text-slate-900 tabular-nums">
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-mono text-2xl font-semibold text-slate-900 tabular-nums">
                 {decStats.accuracy}%
               </span>
               <span className="font-mono text-xs text-slate-500 tabular-nums">
-                ({decStats.correct}/{decStats.attempted} Questions Correct)
+                ({decStats.correct}/{decStats.attempted} Correct)
               </span>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full bg-[#059669] transition-opacity duration-200"
+                className="h-full bg-[#059669]"
                 style={{ width: `${decStats.accuracy}%` }}
               />
             </div>
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-slate-500">
-                Thousandths · Rounding · Addition · Bridge
-              </span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">10ⁿ · Scaling · Division</span>
               <button
                 type="button"
                 onClick={() => onStartDomainQuiz('decimals')}
-                className="text-xs font-semibold text-[#059669] hover:underline whitespace-nowrap"
+                className="font-semibold text-[#059669] hover:underline whitespace-nowrap"
               >
-                Practice Decimals →
+                Quiz Track II →
               </button>
             </div>
           </div>
         </div>
 
-        {/* Card 3: Cumulative 5th-Grade Standing */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between gap-5">
-          <div className="space-y-2">
+        {/* Card 3: 6th-Grade Bridge Track (6.RP · 6.EE · 6.G) */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between gap-4">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Cumulative Standing</span>
-              <span className="font-mono font-semibold text-slate-800 tabular-nums">
-                {student.dailyStreak} Day Active Streak
+              <span>Track III · 6.RP / 6.EE / 6.G</span>
+              <span className="font-mono font-semibold text-[#D97706] tabular-nums">
+                {bridgeStats.masteredCount}/{bridgeStats.totalModules} Mastered
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Combined 5th-Grade Readiness
+            <h3 className="text-base font-semibold text-slate-900">
+              Ratios, Exponents & Volume
             </h3>
-            <div className="flex items-baseline gap-3 pt-1">
-              <span className="font-mono text-3xl font-semibold text-slate-900 tabular-nums">
-                {overallAccuracy}%
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-mono text-2xl font-semibold text-slate-900 tabular-nums">
+                {bridgeStats.accuracy}%
               </span>
               <span className="font-mono text-xs text-slate-500 tabular-nums">
-                ({overallCorrect}/{overallAttempted} Total Solved)
+                ({bridgeStats.correct}/{bridgeStats.attempted} Correct)
               </span>
             </div>
           </div>
 
-          <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+          <div className="space-y-2.5">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full bg-[#D97706]"
+                style={{ width: `${bridgeStats.accuracy}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">Unit Rates · PEMDAS · 3D</span>
+              <button
+                type="button"
+                onClick={() => onStartDomainQuiz('bridge6')}
+                className="font-semibold text-[#D97706] hover:underline whitespace-nowrap"
+              >
+                Quiz Track III →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Cumulative 6th-Grade Readiness Standing */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Cumulative Standing</span>
+              <span className="font-mono font-semibold text-slate-800 tabular-nums">
+                {student.dailyStreak} Day Streak
+              </span>
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">
+              6th-Grade Readiness Index
+            </h3>
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-mono text-2xl font-semibold text-slate-900 tabular-nums">
+                {overallAccuracy}%
+              </span>
+              <span className="font-mono text-xs text-slate-500 tabular-nums">
+                ({overallCorrect}/{overallAttempted} Solved)
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 border-t border-slate-100 pt-2.5 text-xs text-slate-600">
             <div className="flex items-center justify-between">
-              <span>Mastered Standards (≥85%):</span>
+              <span>Mastered Modules (≥85%):</span>
               <span className="font-mono font-semibold text-slate-900 tabular-nums">
-                {fracStats.masteredCount + decStats.masteredCount} of 8 Modules
+                {totalMastered} of 10
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Completed Quiz Sessions:</span>
+              <span>Completed Sessions:</span>
               <span className="font-mono font-semibold text-slate-900 tabular-nums">
                 {student.attemptHistory.length} Sessions
               </span>
@@ -293,25 +343,32 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
         </div>
       </div>
 
+      {/* INTEGRATED ACHIEVEMENTS COMPONENT */}
+      <AchievementsShowcase
+        student={student}
+        onStartModuleQuiz={onStartModuleQuiz}
+      />
+
       {/* Curriculum Standards Rubric Table */}
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
-              Standard-by-Standard Mastery Rubric
+              Grade 5 → Grade 6 Mastery Rubric (All 10 Modules)
             </h3>
             <p className="text-xs text-slate-500">
-              Click any module action to launch a targeted interactive assessment.
+              Click any module action to launch an interactive assessment and unlock remaining achievement milestones.
             </p>
           </div>
 
           {/* Interactive Filter Tabs */}
-          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1">
             {(
               [
-                { id: 'all', label: 'All 8 Modules' },
-                { id: 'fractions', label: 'Fractions (5.NF)' },
-                { id: 'decimals', label: 'Decimals (5.NBT)' },
+                { id: 'all', label: 'All 10 Modules' },
+                { id: 'fractions', label: 'Fractions (5.NF→6.NS)' },
+                { id: 'decimals', label: 'Decimals (5.NBT→6.NS)' },
+                { id: 'bridge6', label: '6th Bridge (6.RP/EE/G)' },
                 { id: 'review', label: 'Focus Areas' },
               ] as const
             ).map((f) => (
@@ -335,8 +392,8 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-semibold text-slate-500">
-                <th className="py-3.5 px-4">Module & Standard</th>
-                <th className="py-3.5 px-4">Domain</th>
+                <th className="py-3.5 px-4">Module & Standard Bridge</th>
+                <th className="py-3.5 px-4">Track</th>
                 <th className="py-3.5 px-4 text-right">Solved</th>
                 <th className="py-3.5 px-4 text-right">Accuracy</th>
                 <th className="py-3.5 px-4 text-right">Streak</th>
@@ -377,8 +434,12 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
                         <span>Last practiced: {prog.lastPracticed}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-xs capitalize text-slate-600">
-                      {mod.domain}
+                    <td className="py-4 px-4 text-xs text-slate-600">
+                      {mod.domain === 'fractions'
+                        ? 'Fractions'
+                        : mod.domain === 'decimals'
+                          ? 'Decimals'
+                          : '6th Bridge'}
                     </td>
                     <td className="py-4 px-4 text-right font-mono text-xs text-slate-700 tabular-nums">
                       {prog.questionsCorrect}/{prog.questionsAttempted}
@@ -453,7 +514,11 @@ export const ProgressDashboardView: React.FC<ProgressDashboardViewProps> = ({
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <span>{attempt.timestamp}</span>
                         <span aria-hidden="true">·</span>
-                        <span className="capitalize">{attempt.domain}</span>
+                        <span className="capitalize">
+                          {attempt.domain === 'bridge6'
+                            ? '6th-Grade Bridge'
+                            : attempt.domain}
+                        </span>
                         <span aria-hidden="true">·</span>
                         <span className="font-mono tabular-nums">
                           {attempt.durationSeconds}s elapsed

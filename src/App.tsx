@@ -23,7 +23,7 @@ import { ProgressDashboardView } from './components/ProgressDashboardView';
 
 type ActiveView = 'curriculum' | 'quiz' | 'sandbox' | 'progress';
 
-const STORAGE_KEY = 'equate5_student_profiles_v1';
+const STORAGE_KEY = 'equate6_student_profiles_v2';
 
 export default function App() {
   const [profiles, setProfiles] = useState<StudentProfile[]>(() => {
@@ -296,6 +296,10 @@ export default function App() {
               setActiveView('sandbox');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onOpenProgress={() => {
+              setActiveView('progress');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
 
@@ -326,8 +330,7 @@ export default function App() {
       <footer className="mt-16 border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            Equate 5 · 5th Grade Fractions (CCSS.5.NF) & Decimals (CCSS.5.NBT)
-            Learning Studio
+            Equate 5 · Entering 6th Grade Accelerated Math Studio (CCSS.5.NF / 5.NBT → 6.NS / 6.RP / 6.EE)
           </div>
           <div className="flex items-center gap-5">
             <button
@@ -349,7 +352,7 @@ export default function App() {
               onClick={() => setActiveView('progress')}
               className="hover:text-slate-900"
             >
-              Progress Rubric
+              Achievements & Progress
             </button>
           </div>
         </div>
