@@ -1,0 +1,6 @@
+{
+  "name": "Equate 5 — 5th Grade Fractions & Decimals Studio",
+  "description": "Interactive 5th-grade mathematics learning studio featuring hands-on visual manipulatives, adaptive quizzes, and mastery progress tracking for fractions and decimals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
